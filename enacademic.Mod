@@ -2,8 +2,8 @@ MODULE enacademic;
 
 IMPORT Unix, Files, Strings := oocStrings, Out := Console, S := SYSTEM;
 
-CONST firstLink="http://armenian.enacademic.com/25054";
-      lastLink="http://armenian.enacademic.com/54195";
+CONST firstLink="http://armenian.enacademic.com/25054/";
+      lastLink="http://armenian.enacademic.com/54195/";
 tmpFile="tmp.html";
 
 filter='<div id="article"><dl>';
@@ -66,13 +66,13 @@ BEGIN
          Files.WriteByte(outrider, S.VAL(S.BYTE, line[i]))
       END;
 	  INC(i);
-   UNTIL i=LEN(line);
+   UNTIL (line[i] = 0X) OR (i=LEN(line));
 END WriteLine;
 
-PROCEDURE ProcessPage(VAR f: Files.File; outrider: Files.Rider; VAR next: ARRAY OF CHAR);
+PROCEDURE ProcessPage(VAR f: Files.File; VAR outrider: Files.Rider; VAR next: ARRAY OF CHAR);
 VAR r : Files.Rider;
-line: ARRAY 5000 OF CHAR; 
-word, description: ARRAY 5000 OF CHAR;
+line: ARRAY 50000 OF CHAR; 
+word, description: ARRAY 50000 OF CHAR;
 found0, found1, found2, found3, found4, found5 : BOOLEAN;
 i, startpos, endpos : INTEGER;
 BEGIN
@@ -87,11 +87,9 @@ REPEAT
    Strings.FindNext(filter, line, 0, found0, startpos);
 UNTIL found0;
 Out.String("found!"); Out.Ln;
-Out.String(line); Out.Ln;
 found0 := FALSE;
 REPEAT
    ReadLine(r, line);
-   Out.String(line); Out.Ln;
    Strings.FindNext(filter0, line, 0, found0, i);
    IF found0 THEN
       Strings.FindNext('>', line, 0, found1, startpos);
@@ -102,25 +100,20 @@ REPEAT
 		    DEC(endpos);
 			Strings.Extract(line, startpos, endpos - startpos + 1, word);
 			WriteLine(outrider, word);
-			Out.String("TITLE "); Out.String(word); Out.Ln;
+			Out.String("word: "); Out.String(word); Out.Ln;
 			REPEAT
-			   Out.String("entered REPEAT"); Out.Ln;
 			   ReadLine(r, line);
-			   Out.String(line); Out.Ln;
 			   Strings.FindNext(filter1, line, 0, found3, startpos);
 
                            IF found3 THEN
-			                  Out.String("found 3"); Out.Ln;
                               Strings.FindNext('>', line, 0, found4, startpos);
                               IF found4 THEN
 				                 INC(startpos);
-							     Out.String("found 4"); Out.Ln;
 								 Strings.FindNext("</dd>", line, 0, found5, endpos);
                                  IF found5 THEN
 									DEC(endpos);
-									Out.String("found 5"); Out.Ln;
 									Strings.Extract(line, startpos, endpos - startpos + 1, description);
-				                    Out.String("out: ");
+				                    Out.String("description: ");
 				                    Out.String(description); Out.Ln;
 					                Out.String("___________________________"); Out.Ln;
 									Files.WriteByte(outrider, 09X);
@@ -136,12 +129,13 @@ REPEAT
 			found5 := FALSE;
 			REPEAT
                ReadLine(r, line);
-               Strings.FindNext(filterNL, line, 0, found5, endpos);
+               Strings.FindNext(filterNL, line, 0, found5, startpos);
 			UNTIL found5;
-			found5 := FALSE;
-			Strings.FindNext('"http://armenian.enacademic.com/', line, 0, found5, startpos);
+			(*found5 := FALSE;
+			Strings.FindNext('"http://armenian.enacademic.com/', line, 0, found5, startpos);*)
 			IF found5 THEN
-               Strings.Extract(line, startpos + 1, 37, next);
+               (*Strings.Extract(line, startpos + 1, 37, next);*)
+               Strings.Extract(line, startpos + 26, 37, next);
 			END;
 		 END
 	  END
@@ -163,7 +157,7 @@ Files.Set(outRider, outFile, 0);
 link:=firstLink;
 
 
-(*REPEAT*)
+REPEAT
    Strings.Extract(link, 31, 5, num);
    Out.String(link); Out.Ln;
    Out.String(num); Out.Ln;
@@ -176,7 +170,7 @@ link:=firstLink;
 
    Out.String(cmd); Out.Ln;
    Unix.system(cmd);
-
+   i := Unix.Sleep(5);
    (*IF i # 0 THEN
       Out.String("cannot call "); Out.String (cmd); Out.Ln;
       HALT(1);
@@ -190,12 +184,17 @@ link:=firstLink;
    END;
 
 ProcessPage(f, outRider, nextLink);
+Files.Register(outFile);
 Out.String ("page processed"); Out.Ln;
 Out.String( "next link "); Out.String (nextLink); Out.Ln;
-(*UNTIL num = "54195";*)
+link := nextLink;
+Files.Purge(f);
+Files.Close(f);
+i := Unix.Sleep(5);
+UNTIL link = lastLink;
+
 Files.Register(outFile);
 Files.Close(outFile);
-Files.Close(f);
 END main;
 
 

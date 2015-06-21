@@ -170,7 +170,7 @@ REPEAT
 
    Out.String(cmd); Out.Ln;
    Unix.system(cmd);
-   i := Unix.Sleep(5);
+   i := Unix.Sleep(1);
    (*IF i # 0 THEN
       Out.String("cannot call "); Out.String (cmd); Out.Ln;
       HALT(1);
@@ -190,7 +190,7 @@ Out.String( "next link "); Out.String (nextLink); Out.Ln;
 link := nextLink;
 Files.Purge(f);
 Files.Close(f);
-i := Unix.Sleep(5);
+i := Unix.Sleep(1);
 UNTIL link = lastLink;
 
 Files.Register(outFile);

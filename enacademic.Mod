@@ -9,6 +9,7 @@ tmpFile="tmp.html";
 filter='<div id="article"><dl>';
 filter0='<dt itemprop="title" class="term" lang="hy">';
 filter1='<dd itemprop="content" class="descript" lang="hy">';
+filterNL='<li class="next"><a href="http://armenian.enacademic.com/';
 output="test.tab";
 
 PROCEDURE ReadTill(VAR r: Files.Rider; till: CHAR; VAR line: ARRAY OF CHAR);
@@ -131,6 +132,17 @@ REPEAT
 				              END (* found 4 *)
 			               END (* found 3 *)
 			UNTIL found3;
+            (* searching for the next link *)
+			found5 := FALSE;
+			REPEAT
+               ReadLine(r, line);
+               Strings.FindNext(filterNL, line, 0, found5, endpos);
+			UNTIL found5;
+			found5 := FALSE;
+			Strings.FindNext('"http://armenian.enacademic.com/', line, 0, found5, startpos);
+			IF found5 THEN
+               Strings.Extract(line, startpos + 1, 37, next);
+			END;
 		 END
 	  END
    END;
@@ -179,6 +191,7 @@ link:=firstLink;
 
 ProcessPage(f, outRider, nextLink);
 Out.String ("page processed"); Out.Ln;
+Out.String( "next link "); Out.String (nextLink); Out.Ln;
 (*UNTIL num = "54195";*)
 Files.Register(outFile);
 Files.Close(outFile);

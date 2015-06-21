@@ -6,6 +6,7 @@ CONST firstLink="http://armenian.enacademic.com/25054";
       lastLink="http://armenian.enacademic.com/54195";
 tmpFile="tmp.html";
 
+filter='<div id="article"><dl>';
 filter0='<dt itemprop="title" class="term" lang="hy">';
 filter1='<dd itemprop="content" class="descript" lang="hy">';
 output="test.tab";
@@ -19,7 +20,7 @@ REPEAT
    Files.Read(r, ch);
    line[i] := ch;
    INC(i);
-UNTIL ch = 010X;
+UNTIL ch = 0AX;
 
 
 END ReadLine;
@@ -32,27 +33,41 @@ i, startpos, endpos : INTEGER;
 BEGIN
 
 Files.Set(r, f, 0);
-
+Out.String('searching for <div id="article"><dl>'); Out.Ln;
 REPEAT
    ReadLine(r, line);
+   Out.String(line); Out.Ln;
+UNTIL line=filter;
+Out.String("found!"); Out.Ln;
+REPEAT
+   ReadLine(r, line);
+   Out.String(line); Out.Ln;
    Strings.FindNext(filter0, line, 0, found0, i);
    IF found0 THEN
+      Out.String("found 0"); Out.Ln;
       Strings.FindNext('>', line, 0, found1, startpos);
 	  IF found1 THEN
+	     Out.String("found 1"); Out.Ln;
 	     Strings.FindNext("</dt>", line, 0, found2, endpos);
 		 IF found2 THEN
-	        Strings.Extract(line, i, startpos - endpos, word);
+	                Out.String("found 2"); Out.Ln;
+			Strings.Extract(line, i, startpos - endpos, word);
+			Out.String("out: "); Out.String(word); Out.Ln;
 			Files.WriteString(outrider, word);
-			Out.String(word); Out.Ln;
 			REPEAT
+			   Out.String("entered REPEAT"); Out.Ln;
 			   ReadLine(r, line);
+			   Out.String(line); Out.Ln;
 			   Strings.FindNext(filter1, line, 0, found3, startpos);
-               IF found3 THEN
-                  Strings.FindNext('>', line, 0, found4, endpos);
-                  IF found4 THEN
-                     Strings.Extract(line, endpos + 1, Strings.Length(line)-endpos, description);
-					 Out.String(description);
-				  END
+                           IF found3 THEN
+			      Out.String("found 3"); Out.Ln;
+                              Strings.FindNext('>', line, 0, found4, endpos);
+                                 IF found4 THEN
+				    Out.String("found 4"); Out.Ln;
+                                    Strings.Extract(line, endpos + 1, Strings.Length(line)-endpos, description);
+				    Out.String("out: ");
+				    Out.String(description); Out.Ln;
+				 END
 			   END
 			UNTIL found3;
 		 END
@@ -101,7 +116,7 @@ link:=firstLink;
    END;
 
 ProcessPage(f, outRider, nextLink);
-
+Out.String ("page processed"); Out.Ln;
 (*UNTIL num = "54195";*)
 END main;
 

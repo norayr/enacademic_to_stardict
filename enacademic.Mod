@@ -1,6 +1,6 @@
 MODULE enacademic;
 
-IMPORT Unix, Files, Strings := oocStrings, Out := Console;
+IMPORT Unix, Files, Strings := oocStrings, Out := Console, S := SYSTEM;
 
 CONST firstLink="http://armenian.enacademic.com/25054";
       lastLink="http://armenian.enacademic.com/54195";
@@ -11,7 +11,7 @@ filter0='<dt itemprop="title" class="term" lang="hy">';
 filter1='<dd itemprop="content" class="descript" lang="hy">';
 output="test.tab";
 
-PROCEDURE ReadLine(VAR r: Files.Rider; VAR line: ARRAY OF CHAR);
+PROCEDURE ReadTill(VAR r: Files.Rider; till: CHAR; VAR line: ARRAY OF CHAR);
 VAR ch : CHAR;
 i : LONGINT;
 BEGIN
@@ -20,60 +20,122 @@ REPEAT
    Files.Read(r, ch);
    line[i] := ch;
    INC(i);
-UNTIL ch = 0AX;
+   IF i = LEN(line) THEN Out.String("Warning: array lenght reached"); Out.Ln END;
+UNTIL (ch = till) OR r.eof;
+line[i-1] := 0X;
+line [i] := 0X;
+END ReadTill;
 
 
+PROCEDURE ReadLine(VAR r: Files.Rider; VAR line: ARRAY OF CHAR);
+VAR ch : CHAR;
+i : LONGINT;
+eol : BOOLEAN;
+BEGIN
+i := 0;
+eol := FALSE;
+REPEAT
+   Files.Read(r, ch);
+   line[i] := ch;
+   IF (i > 1) THEN
+      IF ((line[i] = 0DX) & (line[i-1]=0AX)) OR ((line[i]=0AX) & (line[i-1]=0DX)) THEN eol := TRUE END;
+   END;
+   INC(i);
+   IF i = LEN(line) THEN 
+      Out.String("Warning: array lenght reached"); Out.Ln;
+	  Out.String("line = "); Out.String(line); Out.Ln;
+   END;
+UNTIL eol OR r.eof;
+line[i-1] := 0X;
+line [i] := 0X;
 END ReadLine;
+
+PROCEDURE WriteLine(VAR outrider: Files.Rider; line : ARRAY OF CHAR);
+VAR i : INTEGER;
+BEGIN
+   i := 0;
+   REPEAT
+      
+	  IF line[i] = 0AX THEN
+         Files.WriteByte(outrider, 05CX); (* \n *)
+		 Files.WriteByte(outrider, 06EX);
+	  ELSIF line[i] = 0X THEN
+	     (* do nothing *)
+      ELSE
+         Files.WriteByte(outrider, S.VAL(S.BYTE, line[i]))
+      END;
+	  INC(i);
+   UNTIL i=LEN(line);
+END WriteLine;
 
 PROCEDURE ProcessPage(VAR f: Files.File; outrider: Files.Rider; VAR next: ARRAY OF CHAR);
 VAR r : Files.Rider;
-line, word, description: ARRAY 1024 OF CHAR;
+line: ARRAY 5000 OF CHAR; 
+word, description: ARRAY 5000 OF CHAR;
 found0, found1, found2, found3, found4, found5 : BOOLEAN;
 i, startpos, endpos : INTEGER;
 BEGIN
 
 Files.Set(r, f, 0);
 Out.String('searching for <div id="article"><dl>'); Out.Ln;
+i := 0;
+found0 := FALSE;
 REPEAT
    ReadLine(r, line);
-   Out.String(line); Out.Ln;
-UNTIL line=filter;
+   INC(i);
+   Strings.FindNext(filter, line, 0, found0, startpos);
+UNTIL found0;
 Out.String("found!"); Out.Ln;
+Out.String(line); Out.Ln;
+found0 := FALSE;
 REPEAT
    ReadLine(r, line);
    Out.String(line); Out.Ln;
    Strings.FindNext(filter0, line, 0, found0, i);
    IF found0 THEN
-      Out.String("found 0"); Out.Ln;
       Strings.FindNext('>', line, 0, found1, startpos);
 	  IF found1 THEN
-	     Out.String("found 1"); Out.Ln;
+	     INC(startpos);
 	     Strings.FindNext("</dt>", line, 0, found2, endpos);
 		 IF found2 THEN
-	                Out.String("found 2"); Out.Ln;
-			Strings.Extract(line, i, startpos - endpos, word);
-			Out.String("out: "); Out.String(word); Out.Ln;
-			Files.WriteString(outrider, word);
+		    DEC(endpos);
+			Strings.Extract(line, startpos, endpos - startpos + 1, word);
+			WriteLine(outrider, word);
+			Out.String("TITLE "); Out.String(word); Out.Ln;
 			REPEAT
 			   Out.String("entered REPEAT"); Out.Ln;
 			   ReadLine(r, line);
 			   Out.String(line); Out.Ln;
 			   Strings.FindNext(filter1, line, 0, found3, startpos);
+
                            IF found3 THEN
-			      Out.String("found 3"); Out.Ln;
-                              Strings.FindNext('>', line, 0, found4, endpos);
-                                 IF found4 THEN
-				    Out.String("found 4"); Out.Ln;
-                                    Strings.Extract(line, endpos + 1, Strings.Length(line)-endpos, description);
-				    Out.String("out: ");
-				    Out.String(description); Out.Ln;
-				 END
-			   END
+			                  Out.String("found 3"); Out.Ln;
+                              Strings.FindNext('>', line, 0, found4, startpos);
+                              IF found4 THEN
+				                 INC(startpos);
+							     Out.String("found 4"); Out.Ln;
+								 Strings.FindNext("</dd>", line, 0, found5, endpos);
+                                 IF found5 THEN
+									DEC(endpos);
+									Out.String("found 5"); Out.Ln;
+									Strings.Extract(line, startpos, endpos - startpos + 1, description);
+				                    Out.String("out: ");
+				                    Out.String(description); Out.Ln;
+					                Out.String("___________________________"); Out.Ln;
+									Files.WriteByte(outrider, 09X);
+									Files.WriteByte(outrider, 09X);
+									Files.WriteByte(outrider, 09X);
+									WriteLine(outrider, description);
+									Files.WriteByte(outrider, 0AX);
+					             END (* found 5 *)
+				              END (* found 4 *)
+			               END (* found 3 *)
 			UNTIL found3;
 		 END
 	  END
    END;
 UNTIL r.eof;
+
 END ProcessPage;
 
 
@@ -95,7 +157,7 @@ link:=firstLink;
    Out.String(num); Out.Ln;
 
    COPY("", cmd);
-   Strings.Append("wget ", cmd);
+   Strings.Append("wget -c ", cmd);
    Strings.Append(link, cmd);
    Strings.Append(" -O ", cmd);
    Strings.Append(tmpFile, cmd);
@@ -118,6 +180,9 @@ link:=firstLink;
 ProcessPage(f, outRider, nextLink);
 Out.String ("page processed"); Out.Ln;
 (*UNTIL num = "54195";*)
+Files.Register(outFile);
+Files.Close(outFile);
+Files.Close(f);
 END main;
 
 

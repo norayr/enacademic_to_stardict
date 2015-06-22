@@ -1,14 +1,14 @@
 VOC = /opt/voc/bin/voc
-
+name = armenian-enacademic
+outdir = armenian_enacademic
 all:
 	$(VOC) -m enacademic.Mod
 	./enacademic
-	cp test.tab enacademic.tab
-	stardict_tabfile enacademic.tab
-	mkdir enacademic_armenian
-	stardict_stardict-repair enacademic.ifo -O enacademic_armenian
+	stardict_tabfile $(name).tab
+	mkdir -p $(outdir)
+	stardict_stardict-repair $(name).ifo -O $(outdir)
 
 clean:
-	rm enacademic.dict
-	rm enacademic.idx
-	rm enacademic.ifo
+	rm $(name).dict
+	rm $(name).idx
+	rm $(name).ifo

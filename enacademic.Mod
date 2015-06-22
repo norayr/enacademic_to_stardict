@@ -11,7 +11,7 @@ filter='<div id="article"><dl>';
 filter0='<dt itemprop="title" class="term" lang="hy">';
 filter1='<dd itemprop="content" class="descript" lang="hy">';
 filterNL='<li class="next"><a href="http://armenian.enacademic.com/';
-output="test.tab";
+output="armenian-enacademic.tab";
 
 PROCEDURE ReadTill(VAR r: Files.Rider; till: CHAR; VAR line: ARRAY OF CHAR);
 VAR ch : CHAR;

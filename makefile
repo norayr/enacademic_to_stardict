@@ -9,6 +9,8 @@ all:
 	stardict_stardict-repair $(name).ifo -O $(outdir)
 
 clean:
+	rm enacademic.c
+	rm enacademic.o
 	rm $(name).dict
 	rm $(name).idx
 	rm $(name).ifo

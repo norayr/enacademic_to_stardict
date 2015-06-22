@@ -1,7 +1,7 @@
 VOC = /opt/voc/bin/voc
 
 all:
-	$(voc) -m enacademic.Mod
+	$(VOC) -m enacademic.Mod
 	./enacademic
 	cp test.tab enacademic.tab
 	stardict_tabfile enacademic.tab

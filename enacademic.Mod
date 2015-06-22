@@ -2,7 +2,8 @@ MODULE enacademic;
 
 IMPORT Unix, Files, Strings := oocStrings, Out := Console, S := SYSTEM;
 
-CONST firstLink="http://armenian.enacademic.com/25054/";
+CONST firstLink="http://armenian.enacademic.com/674/";
+(*firstLink="http://armenian.enacademic.com/25054/";*)
       lastLink="http://armenian.enacademic.com/54195/";
 tmpFile="tmp.html";
 
@@ -74,7 +75,7 @@ VAR r : Files.Rider;
 line: ARRAY 50000 OF CHAR; 
 word, description: ARRAY 50000 OF CHAR;
 found0, found1, found2, found3, found4, found5 : BOOLEAN;
-i, startpos, endpos : INTEGER;
+i, startpos, endpos, p, pp : INTEGER;
 BEGIN
 
 Files.Set(r, f, 0);
@@ -128,14 +129,20 @@ REPEAT
             (* searching for the next link *)
 			found5 := FALSE;
 			REPEAT
-               ReadLine(r, line);
-               Strings.FindNext(filterNL, line, 0, found5, startpos);
+                           ReadLine(r, line);
+                           Strings.FindNext(filterNL, line, 0, found5, startpos);
 			UNTIL found5;
-			(*found5 := FALSE;
-			Strings.FindNext('"http://armenian.enacademic.com/', line, 0, found5, startpos);*)
 			IF found5 THEN
-               (*Strings.Extract(line, startpos + 1, 37, next);*)
-               Strings.Extract(line, startpos + 26, 37, next);
+	                   (* getting pos of "/" which is before the number *)
+	                   Strings.FindNext("/", line, startpos + 55, found5, p);
+	                   (* getting pos of "/" which is after the number   *)
+	                   Strings.FindNext("/", line, startpos + 57, found5, pp);
+	                   (* startpos + 26 is where the link starts
+	                      31 is it's length without a number *)
+                           Strings.Extract(line, startpos + 26, 31 + pp - p, next);
+			ELSE
+			   Out.String("cannot find a next link"); Out.Ln;
+			   HALT(1);
 			END;
 		 END
 	  END
@@ -152,6 +159,13 @@ f, outFile : Files.File;
 outRider: Files.Rider;
 num : ARRAY 32 OF CHAR;
 BEGIN
+
+f := Files.Old(tmpFile);
+IF f # NIL THEN 
+   Files.Purge(f);
+   Files.Close(f);
+END;   
+
 outFile := Files.New(output);
 Files.Set(outRider, outFile, 0);
 link:=firstLink;

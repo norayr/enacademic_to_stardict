@@ -5,4 +5,6 @@ it downloads first page, extracts word and description, and writes them separate
 then stardict_tabfile can create a dictionary for it.
 stardict_stardict-repair is necessary because one of the words is too long.
 
+you can look at [some](https://spyurk.am/posts/1517249) screenshots.
+
 enjoy it.

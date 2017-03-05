@@ -1,4 +1,4 @@
-this allows to convert saass enacademic armenian dictionary to available offline dictionary in any free format.
+this allows to convert saass [enacademic armenian dictionary](http://armenian.enacademic.com/) to available offline dictionary in any free format.
 
 it downloads first page, extracts word and description, and writes them separated by tab to the output file.
 

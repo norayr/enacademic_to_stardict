@@ -2,9 +2,9 @@ MODULE enacademic;
 
 IMPORT Unix, Files, Strings := oocStrings, Out := Console, S := SYSTEM;
 
-CONST firstLink="http://armenian.enacademic.com/674/";
-(*firstLink="http://armenian.enacademic.com/25054/";*)
-      lastLink="http://armenian.enacademic.com/54195/";
+CONST firstLink="http://armenian.academic.ru/10/";
+(*firstLink="http://armenian.academic.ru/25054/";*)
+      lastLink="http://armenian.academic.ru/54195/";
 tmpFile="tmp.html";
 
 filter='<div id="article"><dl>';
